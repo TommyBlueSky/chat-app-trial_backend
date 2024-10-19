@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql');
 const cors = require('cors');
+require('dotenv').config();
 
 
 const app = express();
@@ -13,11 +14,11 @@ app.use(express.json()); // JSONの受信を許可
 
 // MySQLの接続設定（本番公開時には.envファイルに書き換える）
 const db = mysql.createConnection({
-    host: 'localhost',
-    port: 3306, // MySQLのポート番号はデフォルトでは「3306」なので不要（理解しやすい様に記述している）
-    user: 'root',
-    password: 'root',
-    database: 'chat_app_trial',
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT, // MySQLのポート番号はデフォルトでは「3306」なので不要（理解しやすい様に記述している）
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
     charset: 'utf8mb4'
 });
 

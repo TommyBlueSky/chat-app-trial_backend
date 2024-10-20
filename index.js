@@ -12,6 +12,17 @@ app.use(cors({
 }));
 app.use(express.json()); // JSONの受信を許可
 
+const apiKey = (req, res, next) => {
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey && apiKey === process.env.API_KEY) {
+        next(); // 正しいAPIキーの場合、次のミドルウェアへ
+    } else {
+        res.status(403).json({ message: 'Forbidden' }); // APIキーが無効な場合
+    }
+};
+app.use(apiKey); // ミドルウェアを適用
+
+
 // MySQLの接続設定（本番公開時には.envファイルに書き換える）
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -32,7 +43,7 @@ db.connect(err => {
 });
 
 // メッセージの取得
-app.get('/messages', (req, res) => {
+app.get('/messages', apiKey, (req, res) => {
     db.query('SELECT * FROM messages ORDER BY created_at DESC', (err, results) => {
         if (err) throw err;
         res.json(results);
@@ -40,7 +51,7 @@ app.get('/messages', (req, res) => {
 });
 
 // メッセージの作成
-app.post('/messages', (req, res) => {
+app.post('/messages', apiKey, (req, res) => {
   const { username, message } = req.body;
   db.query('INSERT INTO messages (username, message) VALUES (?, ?)', [username, message], (err, result) => {
       if (err) {
@@ -51,7 +62,7 @@ app.post('/messages', (req, res) => {
 });
 
 // メッセージの更新
-app.put('/messages/:id', (req, res) => {
+app.put('/messages/:id', apiKey, (req, res) => {
   const { id } = req.params;
   const { username, message } = req.body;
   db.query('UPDATE messages SET username = ?, message = ? WHERE id = ?', [username, message, id], (err) => {
@@ -63,7 +74,7 @@ app.put('/messages/:id', (req, res) => {
 });
 
 // メッセージの削除
-app.delete('/messages/:id', (req, res) => {
+app.delete('/messages/:id', apiKey, (req, res) => {
   const { id } = req.params;
   db.query('DELETE FROM messages WHERE id = ?', [id], (err) => {
       if (err) {
